@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
@@ -23,164 +23,214 @@ const TABS = [
   { key: "domainReg", label: "Domain Reg" },
 ];
 
-/* ── Mini Calendar ──────────────────────────────────────────────────── */
-const MiniCalendar = ({ label, selected, onSelect, otherDate, isStart }) => {
+const YEARS = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
+
+/* ── Helpers ────────────────────────────────────────────────────────── */
+const isSameDay = (a, b) =>
+  a && b &&
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+const formatDate = (d) =>
+  d
+    ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : null;
+
+/* ── Inline Dropdown Select ─────────────────────────────────────────── */
+const InlineSelect = ({ value, options, onChange, renderOption }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className="flex items-center gap-1 text-sm font-semibold text-gray-200 hover:text-white transition-colors"
+      >
+        {renderOption(value)}
+        <ChevronDown size={12} className={`text-gray-500 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 z-50 py-1 rounded-xl bg-[#1a1a2e] border border-[#2a2a3e] shadow-xl max-h-48 overflow-y-auto scrollbar-hide min-w-[120px]">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
+                opt === value
+                  ? "text-indigo-400 bg-indigo-500/10 font-semibold"
+                  : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+              }`}
+            >
+              {renderOption(opt)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── Single Calendar (shared for start+end) ─────────────────────────── */
+const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
   const today = new Date();
-  const [viewYear, setViewYear] = useState(
-    selected ? selected.getFullYear() : today.getFullYear(),
-  );
-  const [viewMonth, setViewMonth] = useState(
-    selected ? selected.getMonth() : today.getMonth(),
-  );
+  const refDate = (selecting === "start" ? startDate : endDate) || startDate || endDate || today;
+  const [viewYear, setViewYear] = useState(refDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(refDate.getMonth());
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
 
+  // Previous month trailing days
+  const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+
   const cells = useMemo(() => {
     const arr = [];
-    for (let i = 0; i < firstDayOfWeek; i++) arr.push(null);
-    for (let d = 1; d <= daysInMonth; d++) arr.push(d);
+    // Previous month days
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) arr.push({ day: prevMonthDays - i, current: false });
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) arr.push({ day: d, current: true });
+    // Fill remaining to complete grid (6 rows)
+    const remaining = 42 - arr.length;
+    for (let d = 1; d <= remaining; d++) arr.push({ day: d, current: false });
     return arr;
-  }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek]);
+  }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek, prevMonthDays]);
 
-  const isSameDay = (a, b) =>
-    a &&
-    b &&
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
-  const isInRange = (day) => {
-    if (!day || !selected || !otherDate) return false;
-    const current = new Date(viewYear, viewMonth, day);
-    const start = isStart ? selected : otherDate;
-    const end = isStart ? otherDate : selected;
-    if (!start || !end) return false;
-    return current > start && current < end;
+  const isInRange = (day, isCurrent) => {
+    if (!isCurrent || !startDate || !endDate) return false;
+    const d = new Date(viewYear, viewMonth, day);
+    return d > startDate && d < endDate;
   };
 
-  const isToday = (day) => {
-    if (!day) return false;
-    return (
-      day === today.getDate() &&
-      viewMonth === today.getMonth() &&
-      viewYear === today.getFullYear()
-    );
-  };
+  const isRangeStart = (day, isCurrent) =>
+    isCurrent && startDate && isSameDay(new Date(viewYear, viewMonth, day), startDate);
+
+  const isRangeEnd = (day, isCurrent) =>
+    isCurrent && endDate && isSameDay(new Date(viewYear, viewMonth, day), endDate);
+
+  const isToday = (day, isCurrent) =>
+    isCurrent &&
+    day === today.getDate() &&
+    viewMonth === today.getMonth() &&
+    viewYear === today.getFullYear();
 
   const prevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear((y) => y - 1);
-    } else {
-      setViewMonth((m) => m - 1);
-    }
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
+    else setViewMonth((m) => m - 1);
   };
 
   const nextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear((y) => y + 1);
-    } else {
-      setViewMonth((m) => m + 1);
-    }
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
+    else setViewMonth((m) => m + 1);
   };
 
-  return (
-    <div className="flex-1 min-w-[240px]">
-      {/* Label */}
-      <div className="text-[11px] font-bold text-gray-400 dark:text-[#666] uppercase tracking-widest mb-3">
-        {label}
-      </div>
+  // Split cells into rows of 7
+  const rows = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
 
-      {/* Month nav */}
-      <div className="flex items-center justify-between mb-3">
+  return (
+    <div>
+      {/* Month / Year nav */}
+      <div className="flex items-center justify-between mb-4 px-1">
         <button
           onClick={prevMonth}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] text-gray-500 dark:text-[#666] transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
         >
           <ChevronLeft size={16} />
         </button>
-        <span className="text-sm font-semibold text-gray-700 dark:text-[#ccc]">
-          {MONTHS[viewMonth]} {viewYear}
-        </span>
+
+        <div className="flex items-center gap-3">
+          <InlineSelect
+            value={viewMonth}
+            options={Array.from({ length: 12 }, (_, i) => i)}
+            onChange={setViewMonth}
+            renderOption={(m) => MONTHS[m]}
+          />
+          <InlineSelect
+            value={viewYear}
+            options={YEARS}
+            onChange={setViewYear}
+            renderOption={(y) => y}
+          />
+        </div>
+
         <button
           onClick={nextMonth}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] text-gray-500 dark:text-[#666] transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
         >
           <ChevronRight size={16} />
         </button>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
-          <div
-            key={d}
-            className="text-center text-[10px] font-semibold text-gray-400 dark:text-[#555] py-1"
-          >
+          <div key={d} className="text-center text-[11px] font-medium text-gray-500 py-2">
             {d}
           </div>
         ))}
       </div>
 
-      {/* Day grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {cells.map((day, i) => {
-          const isSelected =
-            day &&
-            selected &&
-            isSameDay(selected, new Date(viewYear, viewMonth, day));
-          const inRange = isInRange(day);
-          const todayMark = isToday(day);
+      {/* Day grid — row by row for range row-highlighting */}
+      <div className="space-y-1">
+        {rows.map((row, ri) => (
+          <div key={ri} className="grid grid-cols-7">
+            {row.map((cell, ci) => {
+              const { day, current: isCurrent } = cell;
+              const rangeStart = isRangeStart(day, isCurrent);
+              const rangeEnd = isRangeEnd(day, isCurrent);
+              const inRange = isInRange(day, isCurrent);
+              const todayMark = isToday(day, isCurrent);
+              const isSelected = rangeStart || rangeEnd;
 
-          return (
-            <button
-              key={i}
-              disabled={!day}
-              onClick={() =>
-                day && onSelect(new Date(viewYear, viewMonth, day))
-              }
-              className={`h-9 w-full text-xs rounded-lg transition-all relative font-medium ${
-                !day
-                  ? ""
-                  : isSelected
-                    ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20"
-                    : inRange
-                      ? "bg-indigo-500/10 text-indigo-400 dark:text-indigo-300"
-                      : todayMark
-                        ? "text-indigo-500 dark:text-indigo-400 font-bold ring-1 ring-indigo-500/30"
-                        : "text-gray-700 dark:text-[#aaa] hover:bg-gray-100 dark:hover:bg-white/[0.08]"
-              }`}
-            >
-              {day}
-            </button>
-          );
-        })}
-      </div>
+              // Range background shape: full width for mid-range, half for endpoints
+              let rangeBg = "";
+              if (inRange) rangeBg = "bg-indigo-500/[0.08]";
+              else if (rangeStart && endDate) rangeBg = "bg-gradient-to-r from-transparent to-indigo-500/[0.08]";
+              else if (rangeEnd && startDate) rangeBg = "bg-gradient-to-l from-transparent to-indigo-500/[0.08]";
 
-      {/* Selected date display */}
-      <div className="mt-3 py-2 px-3 rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-100 dark:border-[#1a1a1a] flex items-center justify-center">
-        {selected ? (
-          <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-            {selected.toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              year: "numeric",
+              return (
+                <div key={ci} className={`relative flex items-center justify-center h-10 ${rangeBg}`}>
+                  <button
+                    onClick={() => isCurrent && onSelect(new Date(viewYear, viewMonth, day))}
+                    disabled={!isCurrent}
+                    className={`relative w-9 h-9 rounded-full text-[13px] font-medium transition-all ${
+                      !isCurrent
+                        ? "text-gray-600/40 cursor-default"
+                        : isSelected
+                          ? "bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/30"
+                          : todayMark
+                            ? "text-indigo-400 font-bold ring-1 ring-indigo-500/40 hover:bg-indigo-500/15"
+                            : "text-gray-300 hover:bg-white/[0.06] hover:text-white"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                </div>
+              );
             })}
-          </span>
-        ) : (
-          <span className="text-xs text-gray-400 dark:text-[#444]">
-            Select a date
-          </span>
-        )}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
 /* ── Date Filter Dropdown ───────────────────────────────────────────── */
+const EMPTY_TEMP = {
+  adSeen: { start: null, end: null },
+  postSeen: { start: null, end: null },
+  domainReg: { start: null, end: null },
+};
+
 const DateFilterDropdown = ({
   dateAdSeen,
   setDateAdSeen,
@@ -192,14 +242,11 @@ const DateFilterDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("adSeen");
-  const [tempDates, setTempDates] = useState({
-    adSeen: { start: null, end: null },
-    postSeen: { start: null, end: null },
-    domainReg: { start: null, end: null },
-  });
+  const [selecting, setSelecting] = useState("start"); // "start" | "end"
+  const [tempDates, setTempDates] = useState(EMPTY_TEMP);
   const ref = useRef(null);
 
-  // Sync temp state when opening
+  // Sync temp state from props when opening
   useEffect(() => {
     if (open) {
       setTempDates({
@@ -208,18 +255,41 @@ const DateFilterDropdown = ({
         domainReg: { ...dateDomainReg },
       });
     }
-  }, [open, dateAdSeen, datePostSeen, dateDomainReg]);
+  }, [open]); // only on open toggle
 
   useEffect(() => {
+    if (!open) return;
     const handleClickOutside = (e) => {
-      // Don't close if clicking the trigger (handled by toggle)
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
+
+  const currentTemp = tempDates[activeTab];
+
+  const handleDateSelect = (date) => {
+    setTempDates((prev) => {
+      const tab = { ...prev[activeTab] };
+      if (selecting === "start") {
+        if (tab.end && date > tab.end) {
+          tab.start = date;
+          tab.end = null;
+        } else {
+          tab.start = date;
+        }
+      } else {
+        if (tab.start && date < tab.start) {
+          tab.end = tab.start;
+          tab.start = date;
+        } else {
+          tab.end = date;
+        }
+      }
+      return { ...prev, [activeTab]: tab };
+    });
+    setSelecting((s) => (s === "start" ? "end" : "start"));
+  };
 
   const handleApply = () => {
     setDateAdSeen(tempDates.adSeen);
@@ -229,30 +299,11 @@ const DateFilterDropdown = ({
   };
 
   const handleCancel = () => {
-    setOpen(false);
+    setOpen(false); // discard temp, revert on next open
   };
 
-  const currentTemp = tempDates[activeTab];
-
-  const handleClear = () => {
-    setTempDates((prev) => ({
-      ...prev,
-      [activeTab]: { start: null, end: null },
-    }));
-  };
-
-  const handleClearAll = () => {
-    setTempDates({
-      adSeen: { start: null, end: null },
-      postSeen: { start: null, end: null },
-      domainReg: { start: null, end: null },
-    });
-  };
-
-  const hasCurrentTempDates = currentTemp.start || currentTemp.end;
-  const hasAnyTempDates = Object.values(tempDates).some(
-    (d) => d.start || d.end,
-  );
+  // Check if a tab has dates set (in temp state while open)
+  const tabHasDate = (key) => tempDates[key].start || tempDates[key].end;
 
   return (
     <div ref={ref} className="relative">
@@ -273,6 +324,7 @@ const DateFilterDropdown = ({
           </span>
         )}
       </button>
+
       {/* Mobile Overlay */}
       {open && (
         <div
@@ -284,115 +336,78 @@ const DateFilterDropdown = ({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="fixed inset-x-3 top-1/2 -translate-y-1/2 sm:inset-auto sm:translate-y-0 sm:absolute sm:right-0 sm:top-full sm:mt-2 z-50 rounded-2xl border border-gray-200 dark:border-[#1c1c1c] bg-white dark:bg-[#111] shadow-2xl shadow-black/15 dark:shadow-black/50 max-h-[90vh] sm:max-h-[85vh] overflow-y-auto">
-          {/* Header with tabs */}
-          <div className="sticky top-0 z-10 bg-white dark:bg-[#111] border-b border-gray-100 dark:border-[#1a1a1a] rounded-t-2xl">
-            <div className="flex items-center gap-1 p-2">
-              {TABS.map((tab) => {
-                const hasDate =
-                  tempDates[tab.key].start || tempDates[tab.key].end;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`relative flex-1 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all ${
-                      activeTab === tab.key
-                        ? "text-white bg-indigo-600 shadow-md shadow-indigo-500/20"
-                        : "text-gray-400 dark:text-[#555] hover:text-gray-600 dark:hover:text-[#888] hover:bg-gray-50 dark:hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    {tab.label}
-                    {hasDate && activeTab !== tab.key && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+        <div className="fixed inset-x-3 top-1/2 -translate-y-1/2 sm:inset-auto sm:translate-y-0 sm:absolute sm:right-0 sm:top-full sm:mt-2 z-50 w-auto sm:w-[380px] rounded-2xl bg-[#0f0f1a] border border-[#1e1e30] shadow-2xl shadow-black/50">
+          {/* Filter type tabs */}
+          <div className="flex items-center gap-1 p-2.5 pb-0">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => { setActiveTab(tab.key); setSelecting("start"); }}
+                className={`relative flex-1 px-2 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${
+                  activeTab === tab.key
+                    ? "text-white bg-indigo-600/90 shadow-md shadow-indigo-500/20"
+                    : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.04]"
+                }`}
+              >
+                {tab.label}
+                {tabHasDate(tab.key) && activeTab !== tab.key && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Calendar area */}
-          <div className="p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
-              <MiniCalendar
-                label="Start Date"
-                selected={currentTemp.start}
-                otherDate={currentTemp.end}
-                isStart={true}
-                onSelect={(date) =>
-                  setTempDates((prev) => ({
-                    ...prev,
-                    [activeTab]: { ...prev[activeTab], start: date },
-                  }))
-                }
-              />
+          {/* Date input pills */}
+          <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
+            <button
+              onClick={() => setSelecting("start")}
+              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-center transition-all ${
+                selecting === "start"
+                  ? "bg-[#1a1a30] border-2 border-indigo-500/60 text-white shadow-md shadow-indigo-500/10"
+                  : "bg-[#12121f] border-2 border-transparent text-gray-400 hover:border-[#2a2a3e]"
+              }`}
+            >
+              {formatDate(currentTemp.start) || "Start Date"}
+            </button>
+            <button
+              onClick={() => setSelecting("end")}
+              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-center transition-all ${
+                selecting === "end"
+                  ? "bg-[#1a1a30] border-2 border-indigo-500/60 text-white shadow-md shadow-indigo-500/10"
+                  : "bg-[#12121f] border-2 border-transparent text-gray-400 hover:border-[#2a2a3e]"
+              }`}
+            >
+              {formatDate(currentTemp.end) || "End Date"}
+            </button>
+          </div>
 
-              {/* Divider */}
-              <div className="hidden sm:flex flex-col items-center justify-center gap-2">
-                <div className="w-px flex-1 bg-gray-100 dark:bg-[#1a1a1a]" />
-                <span className="text-[10px] font-bold text-gray-300 dark:text-[#333] uppercase">
-                  to
-                </span>
-                <div className="w-px flex-1 bg-gray-100 dark:bg-[#1a1a1a]" />
-              </div>
-              <div className="flex sm:hidden items-center gap-3">
-                <div className="flex-1 h-px bg-gray-100 dark:bg-[#1a1a1a]" />
-                <span className="text-[10px] font-bold text-gray-300 dark:text-[#333] uppercase">
-                  to
-                </span>
-                <div className="flex-1 h-px bg-gray-100 dark:bg-[#1a1a1a]" />
-              </div>
+          {/* Divider */}
+          <div className="h-px bg-[#1e1e30] mx-4" />
 
-              <MiniCalendar
-                label="End Date"
-                selected={currentTemp.end}
-                otherDate={currentTemp.start}
-                isStart={false}
-                onSelect={(date) =>
-                  setTempDates((prev) => ({
-                    ...prev,
-                    [activeTab]: { ...prev[activeTab], end: date },
-                  }))
-                }
-              />
-            </div>
+          {/* Calendar */}
+          <div className="px-4 py-4">
+            <Calendar
+              startDate={currentTemp.start}
+              endDate={currentTemp.end}
+              selecting={selecting}
+              onSelect={handleDateSelect}
+            />
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-white dark:bg-[#111] border-t border-gray-100 dark:border-[#1a1a1a] px-4 sm:px-5 py-3 rounded-b-2xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {hasCurrentTempDates && (
-                <button
-                  onClick={handleClear}
-                  className="flex items-center gap-1.5 text-xs font-medium text-gray-400 dark:text-[#555] hover:text-red-400 transition-colors"
-                >
-                  <X size={12} />
-                  Clear
-                </button>
-              )}
-              {hasAnyTempDates && (
-                <button
-                  onClick={handleClearAll}
-                  className="text-xs font-medium text-gray-400 dark:text-[#555] hover:text-red-400 transition-colors"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 rounded-xl text-gray-400 dark:text-[#666] hover:text-gray-600 dark:hover:text-[#aaa] text-xs font-bold uppercase tracking-wider transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApply}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-indigo-500/20"
-              >
-                Apply
-              </button>
-            </div>
+          <div className="flex items-center justify-end gap-2.5 px-4 py-3 border-t border-[#1e1e30]">
+            <button
+              onClick={handleCancel}
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white bg-[#12121f] hover:bg-[#1a1a2e] border border-[#2a2a3e] transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleApply}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all"
+            >
+              Apply
+            </button>
           </div>
         </div>
       )}
