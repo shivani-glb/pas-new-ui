@@ -34,7 +34,7 @@ export const AD_CATEGORIES = [
     { id: 'auto', label: 'Automotive' },
 ];
 
-export const SORT_TABS = ['Newest', 'Popular', 'Running Longest', 'Oldest'];
+export const SORT_TABS = ['Newest', 'Popular', 'Running Longest', 'Oldest','Impressions','Likes','Comments','Shares'];
 
 export const FILTER_OPTIONS = {
     categories: ['Ecommerce', 'Finance & Insurance', 'Crypto', 'Clothing & Accessories', 'Education', 'Software & SaaS', 'Health & Fitness', 'Travel', 'Real Estate', 'Gaming', 'Automotive'],
