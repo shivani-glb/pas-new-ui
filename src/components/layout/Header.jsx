@@ -108,9 +108,8 @@ const Header = ({
   const [catSuggestions, setCatSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const suggestionRef = useRef(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileRef = useRef(null);
 
   // Get the last word for individual word suggestion
   const lastWord = (searchQuery || "").trim().split(/\s+/).pop() || "";
