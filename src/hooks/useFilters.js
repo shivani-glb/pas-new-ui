@@ -21,10 +21,20 @@ export const useFilters = () => {
     const [domainAge, setDomainAge] = useState('All Ages');
     const [sortBy, setSortBy] = useState('Newest');
 
+    // Date range filters: { start: Date|null, end: Date|null }
+    const [dateAdSeen, setDateAdSeen] = useState({ start: null, end: null });
+    const [datePostSeen, setDatePostSeen] = useState({ start: null, end: null });
+    const [dateDomainReg, setDateDomainReg] = useState({ start: null, end: null });
+
+    const activeDateFilters =
+        (dateAdSeen.start || dateAdSeen.end ? 1 : 0) +
+        (datePostSeen.start || datePostSeen.end ? 1 : 0) +
+        (dateDomainReg.start || dateDomainReg.end ? 1 : 0);
+
     const totalActiveFilters =
         selCategories.length + selAdTypes.length + selCTAs.length +
         selCountries.length + selEcommerce.length + selFunnels.length +
-        selAffiliates.length;
+        selAffiliates.length + activeDateFilters;
 
     const clearAll = () => {
         setSelCategories([]);
@@ -34,6 +44,9 @@ export const useFilters = () => {
         setSelEcommerce([]);
         setSelFunnels([]);
         setSelAffiliates([]);
+        setDateAdSeen({ start: null, end: null });
+        setDatePostSeen({ start: null, end: null });
+        setDateDomainReg({ start: null, end: null });
     };
 
     return {
@@ -51,6 +64,12 @@ export const useFilters = () => {
         postDate, setPostDate,
         domainAge, setDomainAge,
         sortBy, setSortBy,
+
+        // Date range filters
+        dateAdSeen, setDateAdSeen,
+        datePostSeen, setDatePostSeen,
+        dateDomainReg, setDateDomainReg,
+        activeDateFilters,
 
         // Derived
         totalActiveFilters,

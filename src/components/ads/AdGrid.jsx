@@ -4,6 +4,7 @@ import AdCard from "./AdCard";
 import PlatformTab from "../shared/PlatformTab";
 import FilterChip from "../filters/FilterChip";
 import SortDropdown from "../filters/SortDropdown";
+import DateFilterDropdown from "../filters/DateFilterDropdown";
 import { PLATFORMS, SORT_TABS, AD_CATEGORIES } from "../../constants";
 
 const AdGrid = ({
@@ -45,6 +46,17 @@ const AdGrid = ({
               setActiveTab(tab);
               filters.setSortBy(tab);
             }}
+          />
+
+          {/* Date filter dropdown */}
+          <DateFilterDropdown
+            dateAdSeen={filters.dateAdSeen}
+            setDateAdSeen={filters.setDateAdSeen}
+            datePostSeen={filters.datePostSeen}
+            setDatePostSeen={filters.setDatePostSeen}
+            dateDomainReg={filters.dateDomainReg}
+            setDateDomainReg={filters.setDateDomainReg}
+            activeDateFilters={filters.activeDateFilters}
           />
         </div>
 
