@@ -1,0 +1,47 @@
+# PowerAdSpy Filter Integration Plan
+
+The browser subagent successfully extracted the actual filters used in the live PowerAdSpy application. This plan outlines how we will integrate the most important ones into the new React UI.
+
+## Proposed Changes
+
+### 1. Update Platform Toggles (Main Content Area)
+We will expand the platform toggles located at the top of the main view to include the most prominent platforms found in the real app.
+- **Current:** FB, IG, YT, IN
+- **New Additions:** Google (Search/GDN), Native, Reddit, Pinterest, TikTok. We will add appropriate Lucide icons for these or use general icons if specific ones are missing (e.g., `MessageCircle` for Reddit, `Map` for Native).
+
+### 2. Update Sidebar Filters
+The new UI utilizes a left sidebar for filters (`Discovery Filters` and `Time Matrix`), which is a great place to organize the dense dropdowns from the original app's top bar without cluttering the UI.
+
+**Sidebar Section: Discovery Options**
+*   **Ad Category:** (replaces general Ad Preference) Options like Ecom, Finance, Crypto, App Install.
+*   **Ad Preference (CTA/Type):** Image/Video, Call to Actions.
+*   **Target Country:** Worldwide, US, UK, Canada, Australia.
+
+**Sidebar Section: Time & Sorting Matrix**
+*   **Sort By:** Newest, Last Seen, Running Longest (moved from main area).
+*   **Ad Seen Date:** Today, Last 7 Days, Last 30 Days.
+*   **Post Date:** Today, Last 7 Days, Last 30 Days.
+
+**Sidebar Section: Lander & Affiliates (NEW SECTION)**
+*   **Ecommerce Platform:** Shopify, Magento, WooCommerce.
+*   **Funnel Builder:** ClickFunnels, LeadPages, Kajabi.
+*   **Affiliate Network:** ClickBank, ShareASale.
+
+### 3. Update Top Search Bar
+*   Modify the placeholder to reflect the real app's capability: `"Search Keyword, Advertiser, or Domain..."`
+
+### Code Modifications
+#### [MODIFY] [App.jsx](file:///c:/Users/GLB-BLR-307/Documents/pas-new-ui/src/App.jsx)
+- Import new icons from `lucide-react`.
+- Expand PlatformTabs mapping in the main section.
+- Add the new Sidebar sections and update `FilterDropdown` components with the new real-world data points.
+
+## Verification Plan
+### Automated Tests
+- We are not setting up extensive automated React tests (jest/rtl) at this stage. Instead, we'll rely on local development server verification.
+
+### Manual Verification
+1. Run the local Vite dev server via terminal `npm run dev`.
+2. Open the UI in the browser and visually confirm that all new sidebar sections (Lander & Affiliates) exist.
+3. Hover over the `FilterDropdown` components to verify the new specific values (e.g., Shopify, Date Ranges) are reflected. 
+4. Ensure the platform tab horizontal scrolling/layout works properly with 8-10 items instead of 4.

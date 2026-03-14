@@ -1,0 +1,19 @@
+[36mvite v4.5.14 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 24 modules transformed.
+[32m✓ built in 468ms[39m
+[31mUnexpected token[39m
+file: [36mC:/Users/GLB-BLR-307/Documents/pas-new-ui/src/constants/index.js:8:43[39m
+[33m 6: 
+ 7: export const PLATFORMS = [
+ 8:     { id: 'Facebook',  label: 'FB',  icon: <Facebook size={13} />,      color: 'text-blue-400' },
+                                               ^
+ 9:     { id: 'Instagram', label: 'IG',  icon: <Instagram size={13} />,     color: 'text-pink-400' },
+10:     { id: 'YouTube',   label: 'YT',  icon: <Youtube size={13} />,       color: 'text-red-400' },[39m
+[31merror during build:
+RollupError: Unexpected token
+    at error (file:///C:/Users/GLB-BLR-307/Documents/pas-new-ui/node_modules/rollup/dist/es/shared/node-entry.js:2287:30)
+    at Module.error (file:///C:/Users/GLB-BLR-307/Documents/pas-new-ui/node_modules/rollup/dist/es/shared/node-entry.js:13751:16)
+    at Module.tryParse (file:///C:/Users/GLB-BLR-307/Documents/pas-new-ui/node_modules/rollup/dist/es/shared/node-entry.js:14482:25)
+    at Module.setSource (file:///C:/Users/GLB-BLR-307/Documents/pas-new-ui/node_modules/rollup/dist/es/shared/node-entry.js:14083:39)
+    at ModuleLoader.addModuleSource (file:///C:/Users/GLB-BLR-307/Documents/pas-new-ui/node_modules/rollup/dist/es/shared/node-entry.js:24678:20)[39m
