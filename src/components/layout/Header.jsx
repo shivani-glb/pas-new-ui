@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Play, Search, ChevronDown, Sparkles, Bell, Loader2 } from 'lucide-react';
+import { Menu, Play, Search, ChevronDown, Sparkles, Bell, Loader2, User, EyeOff, Heart, Plus, UserPlus, Youtube, Twitter, Calendar, Image as ImageIcon, LogOut } from 'lucide-react';
 import { useDebounce } from '../../hooks/useDebounce';
 
 const Header = ({
@@ -17,6 +17,8 @@ const Header = ({
     const [isLoading, setIsLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const suggestionRef = useRef(null);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const profileRef = useRef(null);
 
     // Get the last word for individual word suggestion
     const lastWord = searchQuery.trim().split(/\s+/).pop() || '';
@@ -98,11 +100,14 @@ const Header = ({
         }
     }, [debouncedLastWord]);
 
-    // Close suggestions on click outside
+    // Close suggestions and profile on click outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (suggestionRef.current && e.target instanceof Node && !suggestionRef.current.contains(e.target)) {
                 setShowSuggestions(false);
+            }
+            if (profileRef.current && e.target instanceof Node && !profileRef.current.contains(e.target)) {
+                setIsProfileOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -298,7 +303,68 @@ const Header = ({
                     <Bell size={17} />
                     <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
                 </button>
-                <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] font-black cursor-pointer hover:bg-indigo-500 transition-colors text-white">AI</div>
+                <div className="relative" ref={profileRef}>
+                    <button 
+                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                        className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] font-black cursor-pointer hover:bg-indigo-500 transition-colors text-white"
+                    >
+                        AI
+                    </button>
+                    
+                    {isProfileOpen && (
+                        <div className="absolute right-0 mt-3 w-[220px] bg-[#161616] border border-[#222] rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200 text-gray-300">
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <User size={16} className="text-[#888]" />
+                                <span>Account</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <EyeOff size={16} className="text-[#888]" />
+                                <span>Hidden ads</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <Heart size={16} className="text-[#888]" />
+                                <span>Favourite ads</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <Plus size={16} className="text-[#888]" />
+                                <span>Create request</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <UserPlus size={16} className="text-[#888]" />
+                                <span>Invite friends</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <Youtube size={16} className="text-[#888]" />
+                                <span>Watch our tutorials</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <Twitter size={16} className="text-[#888]" />
+                                <span>Share this on Twitter</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <Calendar size={16} className="text-[#888]" />
+                                <span>Book a demo</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-white/[0.04] transition-colors">
+                                <ImageIcon size={16} className="text-[#888]" />
+                                <span>My gallery</span>
+                            </button>
+                            <div className="h-px bg-[#222] mx-4 my-1"></div>
+                            <button className="w-full flex items-center gap-3 px-4 py-2 text-[13px] hover:bg-red-500/10 hover:text-red-400 transition-colors group">
+                                <LogOut size={16} className="text-[#888] group-hover:text-red-400 transition-colors" />
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </header>
     );
