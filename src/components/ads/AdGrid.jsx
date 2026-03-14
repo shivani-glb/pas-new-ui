@@ -3,6 +3,7 @@ import { LayoutGrid } from "lucide-react";
 import AdCard from "./AdCard";
 import PlatformTab from "../shared/PlatformTab";
 import FilterChip from "../filters/FilterChip";
+import SortDropdown from "../filters/SortDropdown";
 import { PLATFORMS, SORT_TABS, AD_CATEGORIES } from "../../constants";
 
 const AdGrid = ({
@@ -36,25 +37,15 @@ const AdGrid = ({
 
           <div className="h-5 w-px bg-gray-200 dark:bg-[#1c1c1c] hidden sm:block" />
 
-          {/* Sort tabs */}
-          <div className="flex items-center gap-0.5">
-            {SORT_TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  filters.setSortBy(tab);
-                }}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-                  activeTab === tab
-                    ? "bg-indigo-600 text-white"
-                    : "text-[#888] hover:text-[#ccc] hover:bg-white/[0.04]"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          {/* Sort dropdown */}
+          <SortDropdown
+            options={SORT_TABS}
+            activeTab={activeTab}
+            onSelect={(tab) => {
+              setActiveTab(tab);
+              filters.setSortBy(tab);
+            }}
+          />
         </div>
 
         {/* Right side: active chips + counter */}
