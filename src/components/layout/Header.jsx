@@ -160,11 +160,11 @@ const Header = ({
     };
 
     return (
-        <header className="h-12 px-4 flex items-center justify-between sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#1c1c1c]">
+        <header className="h-16 px-4 flex items-center justify-between sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#1c1c1c]">
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="p-1.5 hover:bg-white/[0.06] rounded-lg transition-colors text-[#555] hover:text-white"
+                    className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-[#aaa] hover:text-white"
                 >
                     <Menu size={18} />
                 </button>
@@ -178,9 +178,9 @@ const Header = ({
 
             {/* Search Container */}
             <div className="flex-1 max-w-2xl flex items-center gap-2 px-6 relative" ref={suggestionRef}>
-                <div className="flex-1 flex items-center bg-[#111] border border-[#222] rounded-xl overflow-hidden focus-within:border-indigo-500/50 transition-all">
+                <div className="flex-1 flex items-center bg-[#111] border border-[#222] rounded-lg overflow-hidden focus-within:border-indigo-500/50 transition-all">
                     <div className="relative group/si">
-                        <button className="flex items-center gap-1 pl-3 pr-2 py-1.5 text-[10px] font-bold text-[#555] border-r border-[#222] whitespace-nowrap hover:text-indigo-400 transition-colors">
+                        <button className="flex items-center gap-1 pl-3 pr-2 py-1.5 text-[10px] font-bold text-[#888] border-r border-[#222] whitespace-nowrap hover:text-indigo-400 transition-colors">
                             {searchIn} <ChevronDown size={10} />
                         </button>
                         <div className="absolute top-full left-0 mt-1 bg-[#161616] border border-[#2a2a2a] rounded-xl shadow-2xl w-36 z-50 py-1 opacity-0 pointer-events-none group-hover/si:opacity-100 group-hover/si:pointer-events-auto transition-opacity">
