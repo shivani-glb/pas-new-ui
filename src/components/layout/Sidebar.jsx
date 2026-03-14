@@ -115,10 +115,42 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, filters, onGenerateStrategy }) => {
           {/* Engagement */}
           <SectionLabel label="Engagement" />
           <div className="space-y-0.5">
-            <RangeFilter icon={<ThumbsUp size={11} />} label="Likes" />
-            <RangeFilter icon={<Share2 size={11} />} label="Shares" />
-            <RangeFilter icon={<MessageSquare size={11} />} label="Comments" />
-            <RangeFilter icon={<Eye size={11} />} label="Impressions" />
+            <RangeFilter
+              icon={<ThumbsUp size={12} />}
+              label="Likes"
+              min={0}
+              max={100000}
+              step={500}
+              value={filters.likesRange}
+              onChange={filters.setLikesRange}
+            />
+            <RangeFilter
+              icon={<Share2 size={12} />}
+              label="Shares"
+              min={0}
+              max={100000}
+              step={500}
+              value={filters.sharesRange}
+              onChange={filters.setSharesRange}
+            />
+            <RangeFilter
+              icon={<MessageSquare size={12} />}
+              label="Comments"
+              min={0}
+              max={100000}
+              step={500}
+              value={filters.commentsRange}
+              onChange={filters.setCommentsRange}
+            />
+            <RangeFilter
+              icon={<Eye size={12} />}
+              label="Impressions"
+              min={0}
+              max={1000000}
+              step={5000}
+              value={filters.impressionsRange}
+              onChange={filters.setImpressionsRange}
+            />
           </div>
 
           <SidebarDivider />

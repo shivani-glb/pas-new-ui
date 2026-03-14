@@ -15,6 +15,12 @@ export const useFilters = () => {
     const [selFunnels, setSelFunnels] = useState([]);
     const [selAffiliates, setSelAffiliates] = useState([]);
 
+    // Engagement range filters: [min, max]
+    const [likesRange, setLikesRange] = useState([0, 100000]);
+    const [sharesRange, setSharesRange] = useState([0, 100000]);
+    const [commentsRange, setCommentsRange] = useState([0, 100000]);
+    const [impressionsRange, setImpressionsRange] = useState([0, 1000000]);
+
     // Single-select filters
     const [adSeen, setAdSeen] = useState('Anytime');
     const [postDate, setPostDate] = useState('Last 30 Days');
@@ -58,6 +64,12 @@ export const useFilters = () => {
         selEcommerce, setSelEcommerce,
         selFunnels, setSelFunnels,
         selAffiliates, setSelAffiliates,
+
+        // Engagement ranges
+        likesRange, setLikesRange,
+        sharesRange, setSharesRange,
+        commentsRange, setCommentsRange,
+        impressionsRange, setImpressionsRange,
 
         // Single-select state + setters
         adSeen, setAdSeen,
