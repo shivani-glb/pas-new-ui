@@ -3,8 +3,18 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const TABS = [
@@ -34,7 +44,8 @@ const MiniCalendar = ({ label, selected, onSelect, otherDate, isStart }) => {
   }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek]);
 
   const isSameDay = (a, b) =>
-    a && b &&
+    a &&
+    b &&
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
@@ -116,7 +127,10 @@ const MiniCalendar = ({ label, selected, onSelect, otherDate, isStart }) => {
       {/* Day grid */}
       <div className="grid grid-cols-7 gap-1">
         {cells.map((day, i) => {
-          const isSelected = day && selected && isSameDay(selected, new Date(viewYear, viewMonth, day));
+          const isSelected =
+            day &&
+            selected &&
+            isSameDay(selected, new Date(viewYear, viewMonth, day));
           const inRange = isInRange(day);
           const todayMark = isToday(day);
 
@@ -124,7 +138,9 @@ const MiniCalendar = ({ label, selected, onSelect, otherDate, isStart }) => {
             <button
               key={i}
               disabled={!day}
-              onClick={() => day && onSelect(new Date(viewYear, viewMonth, day))}
+              onClick={() =>
+                day && onSelect(new Date(viewYear, viewMonth, day))
+              }
               className={`h-9 w-full text-xs rounded-lg transition-all relative font-medium ${
                 !day
                   ? ""
@@ -176,35 +192,67 @@ const DateFilterDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("adSeen");
+  const [tempDates, setTempDates] = useState({
+    adSeen: { start: null, end: null },
+    postSeen: { start: null, end: null },
+    domainReg: { start: null, end: null },
+  });
   const ref = useRef(null);
+
+  // Sync temp state when opening
+  useEffect(() => {
+    if (open) {
+      setTempDates({
+        adSeen: { ...dateAdSeen },
+        postSeen: { ...datePostSeen },
+        domainReg: { ...dateDomainReg },
+      });
+    }
+  }, [open, dateAdSeen, datePostSeen, dateDomainReg]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
+      // Don't close if clicking the trigger (handled by toggle)
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [open]);
 
-  const dateMap = {
-    adSeen: { value: dateAdSeen, setter: setDateAdSeen },
-    postSeen: { value: datePostSeen, setter: setDatePostSeen },
-    domainReg: { value: dateDomainReg, setter: setDateDomainReg },
+  const handleApply = () => {
+    setDateAdSeen(tempDates.adSeen);
+    setDatePostSeen(tempDates.postSeen);
+    setDateDomainReg(tempDates.domainReg);
+    setOpen(false);
   };
 
-  const current = dateMap[activeTab];
+  const handleCancel = () => {
+    setOpen(false);
+  };
+
+  const currentTemp = tempDates[activeTab];
 
   const handleClear = () => {
-    current.setter({ start: null, end: null });
+    setTempDates((prev) => ({
+      ...prev,
+      [activeTab]: { start: null, end: null },
+    }));
   };
 
   const handleClearAll = () => {
-    setDateAdSeen({ start: null, end: null });
-    setDatePostSeen({ start: null, end: null });
-    setDateDomainReg({ start: null, end: null });
+    setTempDates({
+      adSeen: { start: null, end: null },
+      postSeen: { start: null, end: null },
+      domainReg: { start: null, end: null },
+    });
   };
 
-  const hasCurrentDates = current.value.start || current.value.end;
+  const hasCurrentTempDates = currentTemp.start || currentTemp.end;
+  const hasAnyTempDates = Object.values(tempDates).some(
+    (d) => d.start || d.end,
+  );
 
   return (
     <div ref={ref} className="relative">
@@ -225,6 +273,14 @@ const DateFilterDropdown = ({
           </span>
         )}
       </button>
+      {/* Mobile Overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 sm:hidden transition-opacity duration-300"
+          onClick={handleCancel}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Dropdown panel */}
       {open && (
@@ -234,7 +290,7 @@ const DateFilterDropdown = ({
             <div className="flex items-center gap-1 p-2">
               {TABS.map((tab) => {
                 const hasDate =
-                  dateMap[tab.key].value.start || dateMap[tab.key].value.end;
+                  tempDates[tab.key].start || tempDates[tab.key].end;
                 return (
                   <button
                     key={tab.key}
@@ -260,33 +316,43 @@ const DateFilterDropdown = ({
             <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
               <MiniCalendar
                 label="Start Date"
-                selected={current.value.start}
-                otherDate={current.value.end}
+                selected={currentTemp.start}
+                otherDate={currentTemp.end}
                 isStart={true}
                 onSelect={(date) =>
-                  current.setter((prev) => ({ ...prev, start: date }))
+                  setTempDates((prev) => ({
+                    ...prev,
+                    [activeTab]: { ...prev[activeTab], start: date },
+                  }))
                 }
               />
 
               {/* Divider */}
               <div className="hidden sm:flex flex-col items-center justify-center gap-2">
                 <div className="w-px flex-1 bg-gray-100 dark:bg-[#1a1a1a]" />
-                <span className="text-[10px] font-bold text-gray-300 dark:text-[#333] uppercase">to</span>
+                <span className="text-[10px] font-bold text-gray-300 dark:text-[#333] uppercase">
+                  to
+                </span>
                 <div className="w-px flex-1 bg-gray-100 dark:bg-[#1a1a1a]" />
               </div>
               <div className="flex sm:hidden items-center gap-3">
                 <div className="flex-1 h-px bg-gray-100 dark:bg-[#1a1a1a]" />
-                <span className="text-[10px] font-bold text-gray-300 dark:text-[#333] uppercase">to</span>
+                <span className="text-[10px] font-bold text-gray-300 dark:text-[#333] uppercase">
+                  to
+                </span>
                 <div className="flex-1 h-px bg-gray-100 dark:bg-[#1a1a1a]" />
               </div>
 
               <MiniCalendar
                 label="End Date"
-                selected={current.value.end}
-                otherDate={current.value.start}
+                selected={currentTemp.end}
+                otherDate={currentTemp.start}
                 isStart={false}
                 onSelect={(date) =>
-                  current.setter((prev) => ({ ...prev, end: date }))
+                  setTempDates((prev) => ({
+                    ...prev,
+                    [activeTab]: { ...prev[activeTab], end: date },
+                  }))
                 }
               />
             </div>
@@ -295,7 +361,7 @@ const DateFilterDropdown = ({
           {/* Footer */}
           <div className="sticky bottom-0 bg-white dark:bg-[#111] border-t border-gray-100 dark:border-[#1a1a1a] px-4 sm:px-5 py-3 rounded-b-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {hasCurrentDates && (
+              {hasCurrentTempDates && (
                 <button
                   onClick={handleClear}
                   className="flex items-center gap-1.5 text-xs font-medium text-gray-400 dark:text-[#555] hover:text-red-400 transition-colors"
@@ -304,7 +370,7 @@ const DateFilterDropdown = ({
                   Clear
                 </button>
               )}
-              {activeDateFilters > 1 && (
+              {hasAnyTempDates && (
                 <button
                   onClick={handleClearAll}
                   className="text-xs font-medium text-gray-400 dark:text-[#555] hover:text-red-400 transition-colors"
@@ -313,12 +379,20 @@ const DateFilterDropdown = ({
                 </button>
               )}
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-indigo-500/20"
-            >
-              Apply
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 rounded-xl text-gray-400 dark:text-[#666] hover:text-gray-600 dark:hover:text-[#aaa] text-xs font-bold uppercase tracking-wider transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApply}
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-indigo-500/20"
+              >
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       )}

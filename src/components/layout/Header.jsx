@@ -322,19 +322,26 @@ const Header = ({
             placeholder="Search keyword, advertiser, or domain..."
             className="w-full bg-transparent px-3 py-1.5 outline-none text-sm placeholder:text-gray-400 dark:placeholder:text-[#888] text-gray-900 dark:text-gray-200"
           />
-          <div className="flex items-center pr-2">
+          <div className="flex items-center pr-2 gap-1">
             {isLoading && (
-              <Loader2
-                size={14}
-                className="animate-spin text-indigo-500 mr-2"
-              />
+              <Loader2 size={14} className="animate-spin text-indigo-500" />
             )}
-            <button
-              onClick={handleSearch}
-              className="text-gray-400 dark:text-[#888] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-            >
-              <Search size={15} />
-            </button>
+            {searchQuery ? (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="p-1 text-gray-400 dark:text-[#888] hover:text-red-500 transition-colors"
+                title="Clear search"
+              >
+                <X size={14} />
+              </button>
+            ) : (
+              <button
+                onClick={handleSearch}
+                className="p-1 text-gray-400 dark:text-[#888] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                <Search size={15} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -418,15 +425,24 @@ const Header = ({
                 placeholder="Search..."
                 className="flex-1 w-full bg-transparent px-3 py-1.5 outline-none text-sm text-gray-900 dark:text-gray-200"
               />
-              <button
-                onClick={() => {
-                  handleSearch();
-                  setIsMobileSearchOpen(false);
-                }}
-                className="p-1 text-gray-400 dark:text-[#888] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              >
-                <Search size={15} />
-              </button>
+              {searchQuery ? (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 text-gray-400 dark:text-[#888] hover:text-red-500 transition-colors"
+                >
+                  <X size={15} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleSearch();
+                    setIsMobileSearchOpen(false);
+                  }}
+                  className="p-1 text-gray-400 dark:text-[#888] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  <Search size={15} />
+                </button>
+              )}
             </div>
 
             {/* Suggestion Dropdown (Mobile) */}
