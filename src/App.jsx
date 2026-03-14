@@ -29,6 +29,31 @@ const App = () => {
   const [searchIn, setSearchIn] = useState("Ad Text");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  // Theme State with Persistence
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved ? saved === "dark" : true;
+  });
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      console.log("Theme toggling to:", next ? "dark" : "light");
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    console.log("Applying theme class:", isDarkMode ? "dark" : "light");
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
+
   // Modal State
   const [selectedAdForAI, setSelectedAdForAI] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState("");
@@ -102,10 +127,12 @@ const App = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen bg-[#0a0a0a] text-white flex flex-col font-sans selection:bg-indigo-500/20 overflow-hidden">
+    <div className="h-screen bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white flex flex-col font-sans selection:bg-indigo-500/20 overflow-hidden">
       <Header
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
         searchIn={searchIn}
         setSearchIn={setSearchIn}
         searchQuery={searchQuery}

@@ -36,13 +36,13 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, filters, onGenerateStrategy }) => {
                     fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
                     ${isOpen ? "translate-x-0" : "-translate-x-full lg:hidden"}
                     ${isOpen ? "w-64" : "w-0"} 
-                    bg-[#0a0a0a] border-r border-[#1c1c1c] overflow-y-auto scrollbar-hide flex-shrink-0
+                    bg-white dark:bg-[#0a0a0a] border-r border-gray-200 dark:border-[#1c1c1c] overflow-y-auto scrollbar-hide flex-shrink-0
                 `}
       >
         {/* Mobile Close Button */}
         <button
           onClick={() => setIsSidebarOpen(false)}
-          className="lg:hidden absolute top-3 right-2 p-1 text-[#888] hover:text-white/60 hover:bg-white/10 rounded-xl z-[60]"
+          className="lg:hidden absolute top-3 right-2 p-1 text-gray-500 dark:text-[#888] hover:text-gray-900 dark:hover:text-white/60 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl z-[60]"
         >
           <X size={20} />
         </button>
@@ -180,7 +180,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, filters, onGenerateStrategy }) => {
             <div className="px-3 py-4">
               <button
                 onClick={filters.clearAll}
-                className="w-full text-[10px] text-[#888] hover:text-red-400 transition-colors border border-[#1e1e1e] rounded-lg py-1.5 hover:border-red-500/20"
+                className="w-full text-[10px] text-gray-500 dark:text-[#888] hover:text-red-600 dark:hover:text-red-400 transition-colors border border-gray-200 dark:border-[#1e1e1e] rounded-lg py-1.5 hover:border-red-500/20"
               >
                 Clear {filters.totalActiveFilters} filter
                 {filters.totalActiveFilters !== 1 ? "s" : ""}
