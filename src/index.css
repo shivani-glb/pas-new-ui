@@ -13,3 +13,146 @@
     scrollbar-width: none;
   }
 }
+
+/* ── react-day-picker overrides ──────────────────────────────────── */
+.rdp-custom .rdp-root {
+  --rdp-accent-color: rgb(79 70 229);
+  --rdp-accent-background-color: rgb(79 70 229);
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-selected-font: inherit;
+  --rdp-range_middle-background-color: rgb(99 102 241 / 0.08);
+  --rdp-outside-opacity: 1;
+}
+
+.rdp-custom .rdp-month {
+  position: relative;
+  width: 100%;
+}
+
+/* Month grid — tighter spacing */
+.rdp-custom .rdp-month_grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 2px;
+}
+
+.rdp-custom .rdp-month_grid th,
+.rdp-custom .rdp-month_grid td {
+  text-align: center;
+  padding: 0;
+}
+
+/* Chevron icons in nav */
+.rdp-custom .rdp-chevron {
+  fill: currentColor;
+  width: 14px;
+  height: 14px;
+}
+
+/* Month/Year dropdown selects */
+.rdp-custom .rdp-dropdowns select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 22px;
+}
+.dark .rdp-custom .rdp-dropdowns select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+.rdp-custom .rdp-dropdowns select option {
+  background: white;
+  color: #374151;
+}
+.dark .rdp-custom .rdp-dropdowns select option {
+  background: #1a1a2e;
+  color: #e5e7eb;
+}
+
+/* ── Selected day: force white text on indigo bg ─────────────────── */
+.rdp-custom .rdp-selected .rdp-day_button,
+.rdp-custom .rdp-day.rdp-selected .rdp-day_button,
+.rdp-custom td.rdp-selected button {
+  background-color: rgb(79 70 229) !important;
+  color: white !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 8px 16px -4px rgb(99 102 241 / 0.35) !important;
+}
+
+/* Range start/end marker cells */
+.rdp-custom .rdp-range_start .rdp-day_button,
+.rdp-custom .rdp-range_end .rdp-day_button {
+  background-color: rgb(79 70 229) !important;
+  color: white !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 8px 16px -4px rgb(99 102 241 / 0.35) !important;
+}
+
+/* In-range day cells */
+.rdp-custom .rdp-range_middle {
+  background-color: rgb(99 102 241 / 0.08) !important;
+  border-radius: 0 !important;
+}
+
+/* Today marker */
+.rdp-custom .rdp-today .rdp-day_button {
+  color: rgb(79 70 229);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgb(99 102 241 / 0.3);
+  border-radius: 9999px;
+}
+.dark .rdp-custom .rdp-today .rdp-day_button {
+  color: rgb(129 140 248);
+  box-shadow: inset 0 0 0 1px rgb(99 102 241 / 0.4);
+}
+
+/* Outside days — light grey, not invisible */
+.rdp-custom .rdp-outside .rdp-day_button {
+  color: rgb(209 213 219) !important;
+  opacity: 1 !important;
+}
+.dark .rdp-custom .rdp-outside .rdp-day_button {
+  color: rgb(75 85 99) !important;
+}
+
+/* Day button base */
+.rdp-custom .rdp-day_button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.rdp-custom .rdp-day_button:hover:not(:disabled) {
+  background-color: rgb(243 244 246);
+}
+.dark .rdp-custom .rdp-day_button:hover:not(:disabled) {
+  background-color: rgb(255 255 255 / 0.06);
+}
+
+/* Focus ring */
+.rdp-custom .rdp-day_button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(99 102 241 / 0.4);
+  border-radius: 9999px;
+}
+
+/* Weekday header */
+.rdp-custom .rdp-weekday {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgb(156 163 175);
+  padding-bottom: 8px;
+}
+.dark .rdp-custom .rdp-weekday {
+  color: rgb(107 114 128);
+}

@@ -1,26 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-} from "lucide-react";
-
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+import { useState, useRef, useEffect } from "react";
+import { CalendarDays } from "lucide-react";
+import { DayPicker } from "react-day-picker";
+import { format } from "date-fns";
 
 const TABS = [
   { key: "adSeen", label: "Ad Seen" },
@@ -28,248 +9,7 @@ const TABS = [
   { key: "domainReg", label: "Domain Reg" },
 ];
 
-const YEARS = Array.from(
-  { length: 11 },
-  (_, i) => new Date().getFullYear() - 5 + i,
-);
-
-/* ── Helpers ────────────────────────────────────────────────────────── */
-const isSameDay = (a, b) =>
-  a &&
-  b &&
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
-
-const formatDate = (d) =>
-  d
-    ? d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
-
-/* ── Inline Dropdown Select ─────────────────────────────────────────── */
-const InlineSelect = ({ value, options, onChange, renderOption }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((p) => !p)}
-        className="flex items-center gap-1 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-colors"
-      >
-        {renderOption(value)}
-        <ChevronDown
-          size={12}
-          className="text-gray-400 dark:text-gray-500 transition-transform"
-          style={{ transform: open ? "rotate(180deg)" : "none" }}
-        />
-      </button>
-      {open && (
-        <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 z-50 py-1 rounded-xl bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] shadow-xl max-h-48 overflow-y-auto scrollbar-hide min-w-[120px]">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => {
-                onChange(opt);
-                setOpen(false);
-              }}
-              className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
-                opt === value
-                  ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 dark:bg-indigo-500/10 font-semibold"
-                  : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.04]"
-              }`}
-            >
-              {renderOption(opt)}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ── Single Calendar (shared for start+end) ─────────────────────────── */
-const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
-  const today = new Date();
-  const refDate =
-    (selecting === "start" ? startDate : endDate) ||
-    startDate ||
-    endDate ||
-    today;
-  const [viewYear, setViewYear] = useState(refDate.getFullYear());
-  const [viewMonth, setViewMonth] = useState(refDate.getMonth());
-
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
-
-  // Previous month trailing days
-  const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
-
-  const cells = useMemo(() => {
-    const arr = [];
-    // Previous month days
-    for (let i = firstDayOfWeek - 1; i >= 0; i--)
-      arr.push({ day: prevMonthDays - i, current: false });
-    // Current month days
-    for (let d = 1; d <= daysInMonth; d++) arr.push({ day: d, current: true });
-    // Fill remaining to complete grid (6 rows)
-    const remaining = 42 - arr.length;
-    for (let d = 1; d <= remaining; d++) arr.push({ day: d, current: false });
-    return arr;
-  }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek, prevMonthDays]);
-
-  const isInRange = (day, isCurrent) => {
-    if (!isCurrent || !startDate || !endDate) return false;
-    const d = new Date(viewYear, viewMonth, day);
-    return d > startDate && d < endDate;
-  };
-
-  const isRangeStart = (day, isCurrent) =>
-    isCurrent &&
-    startDate &&
-    isSameDay(new Date(viewYear, viewMonth, day), startDate);
-
-  const isRangeEnd = (day, isCurrent) =>
-    isCurrent &&
-    endDate &&
-    isSameDay(new Date(viewYear, viewMonth, day), endDate);
-
-  const isToday = (day, isCurrent) =>
-    isCurrent &&
-    day === today.getDate() &&
-    viewMonth === today.getMonth() &&
-    viewYear === today.getFullYear();
-
-  const prevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear((y) => y - 1);
-    } else setViewMonth((m) => m - 1);
-  };
-
-  const nextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear((y) => y + 1);
-    } else setViewMonth((m) => m + 1);
-  };
-
-  // Split cells into rows of 7
-  const rows = [];
-  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
-
-  return (
-    <div>
-      {/* Month / Year nav */}
-      <div className="flex items-center justify-between mb-4 px-1">
-        <button
-          onClick={prevMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
-        >
-          <ChevronLeft size={16} />
-        </button>
-
-        <div className="flex items-center gap-3">
-          <InlineSelect
-            value={viewMonth}
-            options={Array.from({ length: 12 }, (_, i) => i)}
-            onChange={setViewMonth}
-            renderOption={(m) => MONTHS[m]}
-          />
-          <InlineSelect
-            value={viewYear}
-            options={YEARS}
-            onChange={setViewYear}
-            renderOption={(y) => y}
-          />
-        </div>
-
-        <button
-          onClick={nextMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* Day headers */}
-      <div className="grid grid-cols-7 mb-1">
-        {DAYS.map((d) => (
-          <div
-            key={d}
-            className="text-center text-[11px] font-medium text-gray-400 dark:text-gray-500 py-2"
-          >
-            {d}
-          </div>
-        ))}
-      </div>
-
-      {/* Day grid — row by row for range row-highlighting */}
-      <div className="space-y-1">
-        {rows.map((row, ri) => (
-          <div key={ri} className="grid grid-cols-7">
-            {row.map((cell, ci) => {
-              const { day, current: isCurrent } = cell;
-              const rangeStart = isRangeStart(day, isCurrent);
-              const rangeEnd = isRangeEnd(day, isCurrent);
-              const inRange = isInRange(day, isCurrent);
-              const todayMark = isToday(day, isCurrent);
-              const isSelected = rangeStart || rangeEnd;
-
-              // Range background shape: full width for mid-range, half for endpoints
-              let rangeBg = "";
-              if (inRange) rangeBg = "bg-indigo-500/[0.08]";
-              else if (rangeStart && endDate)
-                rangeBg =
-                  "bg-gradient-to-r from-transparent to-indigo-500/[0.08]";
-              else if (rangeEnd && startDate)
-                rangeBg =
-                  "bg-gradient-to-l from-transparent to-indigo-500/[0.08]";
-
-              return (
-                <div
-                  key={ci}
-                  className={`relative flex items-center justify-center h-10 ${rangeBg}`}
-                >
-                  <button
-                    onClick={() =>
-                      isCurrent && onSelect(new Date(viewYear, viewMonth, day))
-                    }
-                    disabled={!isCurrent}
-                    className={`relative w-9 h-9 rounded-full text-[13px] font-medium transition-all ${
-                      !isCurrent
-                        ? "text-gray-300 dark:text-gray-600/40 cursor-default"
-                        : isSelected
-                          ? "bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/30"
-                          : todayMark
-                            ? "text-indigo-600 dark:text-indigo-400 font-bold ring-1 ring-indigo-500/30 dark:ring-indigo-500/40 hover:bg-indigo-50 dark:hover:bg-indigo-500/15"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-black dark:hover:text-white"
-                    }`}
-                  >
-                    {day}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+const formatDate = (d) => (d ? format(d, "MMM d, yyyy") : null);
 
 /* ── Date Filter Dropdown ───────────────────────────────────────────── */
 const EMPTY_TEMP = {
@@ -289,11 +29,11 @@ const DateFilterDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("adSeen");
-  const [selecting, setSelecting] = useState("start"); // "start" | "end"
+  const [selecting, setSelecting] = useState("start");
   const [tempDates, setTempDates] = useState(EMPTY_TEMP);
+  const [calMonth, setCalMonth] = useState(new Date());
   const ref = useRef(null);
 
-  // Sync temp state from props when opening
   useEffect(() => {
     if (open) {
       setTempDates({
@@ -302,7 +42,7 @@ const DateFilterDropdown = ({
         domainReg: { ...dateDomainReg },
       });
     }
-  }, [open]); // only on open toggle
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -316,6 +56,7 @@ const DateFilterDropdown = ({
   const currentTemp = tempDates[activeTab];
 
   const handleDateSelect = (date) => {
+    if (!date) return;
     setTempDates((prev) => {
       const tab = { ...prev[activeTab] };
       if (selecting === "start") {
@@ -346,11 +87,30 @@ const DateFilterDropdown = ({
   };
 
   const handleCancel = () => {
-    setOpen(false); // discard temp, revert on next open
+    setOpen(false);
   };
 
-  // Check if a tab has dates set (in temp state while open)
   const tabHasDate = (key) => tempDates[key].start || tempDates[key].end;
+
+  // Build modifiers for react-day-picker
+  const modifiers = {};
+  const modifiersClassNames = {};
+
+  if (currentTemp.start) {
+    modifiers.rangeStart = currentTemp.start;
+    modifiersClassNames.rangeStart = "rdp-range_start";
+  }
+  if (currentTemp.end) {
+    modifiers.rangeEnd = currentTemp.end;
+    modifiersClassNames.rangeEnd = "rdp-range_end";
+  }
+  if (currentTemp.start && currentTemp.end) {
+    modifiers.inRange = {
+      after: currentTemp.start,
+      before: currentTemp.end,
+    };
+    modifiersClassNames.inRange = "rdp-range_middle";
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -375,7 +135,7 @@ const DateFilterDropdown = ({
       {/* Mobile Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-80 sm:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] sm:hidden transition-opacity duration-300"
           onClick={handleCancel}
           aria-hidden="true"
         />
@@ -383,7 +143,7 @@ const DateFilterDropdown = ({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="fixed inset-x-3 top-1/2 -translate-y-1/2 sm:inset-auto sm:translate-y-0 sm:absolute sm:right-0 sm:top-full sm:mt-2 z-50 w-auto sm:w-[380px] rounded-2xl bg-white dark:bg-[#111] border border-gray-200 dark:border-[#1e1e30] shadow-2xl shadow-black/10 dark:shadow-black/50">
+        <div className="fixed inset-x-3 top-1/2 -translate-y-1/2 sm:inset-auto sm:translate-y-0 sm:absolute sm:right-0 sm:top-full sm:mt-2 z-[90] w-auto sm:w-[380px] rounded-2xl bg-white dark:bg-[#111] border border-gray-200 dark:border-[#1e1e30] shadow-2xl shadow-black/10 dark:shadow-black/50">
           {/* Filter type tabs */}
           <div className="flex items-center gap-1 p-2.5 pb-0">
             {TABS.map((tab) => (
@@ -434,13 +194,33 @@ const DateFilterDropdown = ({
           {/* Divider */}
           <div className="h-px bg-gray-100 dark:bg-[#1e1e30] mx-4" />
 
-          {/* Calendar */}
-          <div className="px-4 py-4">
-            <Calendar
-              startDate={currentTemp.start}
-              endDate={currentTemp.end}
-              selecting={selecting}
+          {/* Calendar — react-day-picker */}
+          <div className="px-3 sm:px-4 py-3 rdp-custom">
+            <DayPicker
+              mode="single"
+              navLayout="around"
+              selected={selecting === "start" ? currentTemp.start : currentTemp.end}
               onSelect={handleDateSelect}
+              month={calMonth}
+              onMonthChange={setCalMonth}
+              showOutsideDays
+              fixedWeeks
+              modifiers={modifiers}
+              modifiersClassNames={modifiersClassNames}
+              classNames={{
+                root: "w-full",
+                months: "w-full",
+                month: "w-full flex flex-wrap items-center mb-3",
+                month_caption: "flex-1 flex items-center justify-center",
+                caption_label: "text-sm font-semibold text-gray-700 dark:text-gray-200",
+                button_previous:
+                  "w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors order-first",
+                button_next:
+                  "w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors order-2",
+                month_grid: "w-full order-last mt-2",
+                hidden: "invisible",
+                disabled: "opacity-30 cursor-default",
+              }}
             />
           </div>
 
