@@ -4,12 +4,21 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
  * Format large numbers: 1000 → 1K, 1500000 → 1.5M
  */
 const formatNum = (n) => {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
+  if (n >= 1_000_000)
+    return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
   return n.toString();
 };
 
-const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, onChange }) => {
+const RangeFilter = ({
+  icon,
+  label,
+  min = 0,
+  max = 100000,
+  step = 500,
+  value,
+  onChange,
+}) => {
   const [localMin, setLocalMin] = useState(value[0]);
   const [localMax, setLocalMax] = useState(value[1]);
   const [dragging, setDragging] = useState(null); // "min" | "max" | null
@@ -29,7 +38,10 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
   const getValueFromPosition = useCallback(
     (clientX) => {
       const rect = trackRef.current.getBoundingClientRect();
-      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const ratio = Math.max(
+        0,
+        Math.min(1, (clientX - rect.left) / rect.width),
+      );
       const raw = min + ratio * (max - min);
       return Math.round(raw / step) * step;
     },
@@ -59,8 +71,14 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
     const handleUp = () => {
       setDragging(null);
       // Commit to parent
-      const finalMin = dragging === "min" ? Math.max(min, Math.min(localMin, localMax - step)) : localMin;
-      const finalMax = dragging === "max" ? Math.min(max, Math.max(localMax, localMin + step)) : localMax;
+      const finalMin =
+        dragging === "min"
+          ? Math.max(min, Math.min(localMin, localMax - step))
+          : localMin;
+      const finalMax =
+        dragging === "max"
+          ? Math.min(max, Math.max(localMax, localMin + step))
+          : localMax;
       onChange([finalMin, finalMax]);
     };
 
@@ -74,7 +92,16 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
       window.removeEventListener("touchmove", handleMove);
       window.removeEventListener("touchend", handleUp);
     };
-  }, [dragging, localMin, localMax, min, max, step, getValueFromPosition, onChange]);
+  }, [
+    dragging,
+    localMin,
+    localMax,
+    min,
+    max,
+    step,
+    getValueFromPosition,
+    onChange,
+  ]);
 
   const isFiltered = localMin > min || localMax < max;
   const leftPct = pct(localMin);
@@ -87,17 +114,19 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
         onClick={() => setExpanded((p) => !p)}
         className="w-full flex items-center justify-between py-2 group"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 group">
           <span
             className={`transition-colors ${
               isFiltered
-                ? "text-indigo-500"
-                : "text-gray-400 dark:text-[#666] group-hover:text-indigo-500 dark:group-hover:text-indigo-400"
+                ? "text-indigo-500 dark:text-indigo-400"
+                : "text-gray-600 dark:text-[#888] group-hover:text-gray-800 dark:group-hover:text-[#ccc]"
             }`}
           >
             {icon}
           </span>
-          <span className="text-[11px] font-semibold text-gray-600 dark:text-[#bbb] uppercase tracking-wider">
+          <span
+            className={`text-[10px] font-semibold ${isFiltered ? "text-indigo-500 dark:text-indigo-400" : "text-gray-600 dark:text-[#888] group-hover:text-gray-800 dark:group-hover:text-[#ccc]"} uppercase tracking-wider`}
+          >
             {label}
           </span>
         </div>
@@ -110,7 +139,7 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
             </span>
           )}
           <svg
-            className={`w-3 h-3 text-gray-400 dark:text-[#555] transition-transform ${expanded ? "rotate-90" : ""}`}
+            className={`w-3 h-3 text-gray-400 dark:text-[#555] group-hover:text-gray-700 dark:group-hover:text-[#ccc] transition-transform ${expanded ? "rotate-90" : ""}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -125,11 +154,11 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
 
       {/* Slider area */}
       {expanded && (
-        <div className="pb-3 pt-1 px-1">
+        <div className="pb-3 pt-1 px-0">
           {/* Value display row */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-0.5">
             <div className="flex flex-col items-center">
-              <span className="text-[9px] font-medium text-gray-400 dark:text-[#555] uppercase tracking-wider mb-0.5">
+              <span className="text-[9px] font-medium text-gray-400 dark:text-[#777] uppercase tracking-wider mb-0.5">
                 Min
               </span>
               <span className="text-xs font-bold text-gray-700 dark:text-white tabular-nums bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-[#222] rounded-md px-2 py-0.5">
@@ -140,7 +169,7 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
               <div className="w-4 h-px bg-gray-200 dark:bg-[#333]" />
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-[9px] font-medium text-gray-400 dark:text-[#555] uppercase tracking-wider mb-0.5">
+              <span className="text-[9px] font-medium text-gray-400 dark:text-[#777] uppercase tracking-wider mb-0.5">
                 Max
               </span>
               <span className="text-xs font-bold text-gray-700 dark:text-white tabular-nums bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-[#222] rounded-md px-2 py-0.5">
@@ -152,14 +181,14 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
           {/* Track */}
           <div
             ref={trackRef}
-            className="relative h-10 flex items-center cursor-pointer"
+            className="relative h-6 w-[90%] mx-auto flex items-center cursor-pointer"
           >
             {/* Background track */}
-            <div className="absolute inset-x-0 h-1.5 rounded-full bg-gray-100 dark:bg-[#1a1a1a]" />
+            <div className="absolute inset-x-0 h-0.5 rounded-full bg-gray-100 dark:bg-[#1a1a1a]" />
 
             {/* Active range fill */}
             <div
-              className="absolute h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-sm shadow-indigo-500/20"
+              className="absolute h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-sm shadow-indigo-500/20"
               style={{
                 left: `${leftPct}%`,
                 width: `${rightPct - leftPct}%`,
@@ -176,7 +205,7 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
               style={{ left: `${leftPct}%` }}
             >
               <div
-                className={`w-5 h-5 rounded-full border-2 transition-all ${
+                className={`w-4 h-4 rounded-full border-2 transition-all ${
                   dragging === "min"
                     ? "bg-indigo-500 border-indigo-400 shadow-lg shadow-indigo-500/40 scale-110"
                     : "bg-white dark:bg-[#1a1a1a] border-indigo-500 hover:shadow-md hover:shadow-indigo-500/30 hover:scale-105"
@@ -206,7 +235,7 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
               style={{ left: `${rightPct}%` }}
             >
               <div
-                className={`w-5 h-5 rounded-full border-2 transition-all ${
+                className={`w-4 h-4 rounded-full border-2 transition-all ${
                   dragging === "max"
                     ? "bg-indigo-500 border-indigo-400 shadow-lg shadow-indigo-500/40 scale-110"
                     : "bg-white dark:bg-[#1a1a1a] border-indigo-500 hover:shadow-md hover:shadow-indigo-500/30 hover:scale-105"
@@ -228,11 +257,11 @@ const RangeFilter = ({ icon, label, min = 0, max = 100000, step = 500, value, on
           </div>
 
           {/* Scale labels */}
-          <div className="flex items-center justify-between mt-0.5">
-            <span className="text-[9px] text-gray-400 dark:text-[#444] tabular-nums">
+          <div className="flex items-center px-3 justify-between mt-0.5">
+            <span className="text-[9px] text-gray-600 dark:text-[#888] tabular-nums">
               {formatNum(min)}
             </span>
-            <span className="text-[9px] text-gray-400 dark:text-[#444] tabular-nums">
+            <span className="text-[9px] text-gray-600 dark:text-[#888] tabular-nums">
               {formatNum(max)}
             </span>
           </div>
