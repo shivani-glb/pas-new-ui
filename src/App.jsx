@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 
-// Hooks & Services
-import { useFilters } from "./hooks/useFilters";
+// Actions
+import {
+  setAds,
+  setSelectedAdForAI,
+  setAiAnalysis,
+  setIsAnalyzing,
+  setShowCampaignGen,
+  setCampaignStrategy,
+  setIsGeneratingStrategy,
+} from "./store/slices/adSlice";
+
+// Services
 import {
   fetchAds,
   buildAuditPrompt,
@@ -17,32 +28,23 @@ import AIAnalysisModal from "./components/modals/AIAnalysisModal";
 import CampaignModal from "./components/modals/CampaignModal";
 
 const App = () => {
-  // ── Application State ──────────────────────────────────────────────────
-  const filters = useFilters();
-  const [ads, setAds] = useState([]);
+  const dispatch = useDispatch();
 
-  // UI State
-  const [activeTab, setActiveTab] = useState("Newest");
-  const [activePlatform, setActivePlatform] = useState("Facebook");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchIn, setSearchIn] = useState("Ad Text");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // ── Application State (from Redux) ──────────────────────────────────────
+  const filters = useSelector((state) => state.filters);
+  const {
+    ads,
+    selectedAdForAI,
+    aiAnalysis,
+    isAnalyzing,
+    showCampaignGen,
+    campaignStrategy,
+    isGeneratingStrategy,
+  } = useSelector((state) => state.ads);
+  const { activePlatform, activeCategory, searchQuery, searchIn, isDarkMode } =
+    useSelector((state) => state.ui);
 
-  // Theme State with Persistence
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    return saved ? saved === "dark" : true;
-  });
-
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      console.log("Theme toggling to:", next ? "dark" : "light");
-      return next;
-    });
-  };
-
+  // Theme Persistence
   useEffect(() => {
     console.log("Applying theme class:", isDarkMode ? "dark" : "light");
     if (isDarkMode) {
@@ -54,20 +56,10 @@ const App = () => {
     }
   }, [isDarkMode]);
 
-  // Modal State
-  const [selectedAdForAI, setSelectedAdForAI] = useState(null);
-  const [aiAnalysis, setAiAnalysis] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-  const [showCampaignGen, setShowCampaignGen] = useState(false);
-  const [campaignStrategy, setCampaignStrategy] = useState("");
-  const [isGeneratingStrategy, setIsGeneratingStrategy] = useState(false);
-
   // ── Data Fetching ──────────────────────────────────────────────────────
   useEffect(() => {
     const loadAds = async () => {
       try {
-        // Pass all relevant filters/search to the generic fetch provider
         const data = await fetchAds({
           ...filters,
           activePlatform,
@@ -75,7 +67,7 @@ const App = () => {
           searchQuery,
           searchIn,
         });
-        setAds(data);
+        dispatch(setAds(data));
       } catch (error) {
         console.error("Failed to load ads:", error);
       }
@@ -83,7 +75,7 @@ const App = () => {
 
     loadAds();
   }, [
-    // Re-fetch when major filters change
+    dispatch,
     activePlatform,
     activeCategory,
     searchQuery,
@@ -91,88 +83,61 @@ const App = () => {
     filters.selCategories,
     filters.selCountries,
     filters.sortBy,
-    // ... add other filter dependencies as needed when real API is added
   ]);
 
   // ── Handlers ───────────────────────────────────────────────────────────
   const handleAnalyzeAd = async (ad) => {
-    setSelectedAdForAI(ad);
-    setIsAnalyzing(true);
-    setAiAnalysis("");
+    dispatch(setSelectedAdForAI(ad));
+    dispatch(setIsAnalyzing(true));
+    dispatch(setAiAnalysis(""));
     try {
       const prompt = buildAuditPrompt(ad);
       const result = await fetchGemini(prompt);
-      setAiAnalysis(result);
+      dispatch(setAiAnalysis(result));
     } catch {
-      setAiAnalysis("Analysis unavailable.");
+      dispatch(setAiAnalysis("Analysis unavailable."));
     } finally {
-      setIsAnalyzing(false);
+      dispatch(setIsAnalyzing(false));
     }
   };
 
   const handleGenerateCampaign = async () => {
-    setIsGeneratingStrategy(true);
-    setShowCampaignGen(true);
-    setCampaignStrategy("");
+    dispatch(setIsGeneratingStrategy(true));
+    dispatch(setShowCampaignGen(true));
+    dispatch(setCampaignStrategy(""));
     try {
       const prompt = buildCampaignPrompt(ads);
       const result = await fetchGemini(prompt);
-      setCampaignStrategy(result);
+      dispatch(setCampaignStrategy(result));
     } catch {
-      setCampaignStrategy("Strategy generation failed.");
+      dispatch(setCampaignStrategy("Strategy generation failed."));
     } finally {
-      setIsGeneratingStrategy(false);
+      dispatch(setIsGeneratingStrategy(false));
     }
   };
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="h-screen bg-white dark:bg-[#0a0a0a] text-gray-900 dark:text-white flex flex-col font-sans selection:bg-indigo-500/20 overflow-hidden">
-      <Header
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        isDarkMode={isDarkMode}
-        toggleTheme={toggleTheme}
-        searchIn={searchIn}
-        setSearchIn={setSearchIn}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onGenerateStrategy={handleGenerateCampaign}
-        filters={filters}
-      />
+      <Header onGenerateStrategy={handleGenerateCampaign} />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          isOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-          filters={filters}
-          onGenerateStrategy={handleGenerateCampaign}
-        />
-
-        <AdGrid
-          ads={ads}
-          activePlatform={activePlatform}
-          setActivePlatform={setActivePlatform}
-          filters={filters}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          activeCategory={activeCategory}
-          onAnalyzeAd={handleAnalyzeAd}
-        />
+        <Sidebar onGenerateStrategy={handleGenerateCampaign} />
+        <AdGrid onAnalyzeAd={handleAnalyzeAd} />
       </div>
 
       <AIAnalysisModal
         ad={selectedAdForAI}
         analysis={aiAnalysis}
         isAnalyzing={isAnalyzing}
-        onClose={() => setSelectedAdForAI(null)}
+        onClose={() => dispatch(setSelectedAdForAI(null))}
       />
 
       <CampaignModal
         isOpen={showCampaignGen}
         strategy={campaignStrategy}
         isGenerating={isGeneratingStrategy}
-        onClose={() => setShowCampaignGen(false)}
+        onClose={() => dispatch(setShowCampaignGen(false))}
       />
     </div>
   );

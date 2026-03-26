@@ -1,4 +1,5 @@
 import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   LayoutGrid,
   BarChart2,
@@ -11,6 +12,27 @@ import {
   Eye,
   X,
 } from "lucide-react";
+
+import { setSidebarOpen } from "../../store/slices/uiSlice";
+import {
+  setSelCategories,
+  setSelAdTypes,
+  setSelCTAs,
+  setSelCountries,
+  setSelEcommerce,
+  setSelFunnels,
+  setSelAffiliates,
+  setLikesRange,
+  setSharesRange,
+  setCommentsRange,
+  setImpressionsRange,
+  setAdSeen,
+  setPostDate,
+  setDomainAge,
+  clearAllFilters,
+  selectTotalActiveFiltersCount,
+} from "../../store/slices/filterSlice";
+
 import NavItem from "../shared/NavItem";
 import SectionLabel from "../shared/SectionLabel";
 import SidebarDivider from "../shared/SidebarDivider";
@@ -20,7 +42,34 @@ import FilterRadioList from "../filters/FilterRadioList";
 import CategorySearchFilter from "../filters/CategorySearchFilter";
 import { FILTER_OPTIONS } from "../../constants";
 
-const Sidebar = ({ isOpen, setIsSidebarOpen, filters, onGenerateStrategy }) => {
+const Sidebar = ({ onGenerateStrategy }) => {
+  const dispatch = useDispatch();
+  const isOpen = useSelector((state) => state.ui.isSidebarOpen);
+  const filterState = useSelector((state) => state.filters);
+  const totalActiveFilters = useSelector(selectTotalActiveFiltersCount);
+
+  // Wrap Redux actions to mimic the previous useFilters hook interface
+  // This minimizes changes to the JSX structure.
+  const filters = {
+    ...filterState,
+    totalActiveFilters,
+    setSelCategories: (val) => dispatch(setSelCategories(val)),
+    setSelAdTypes: (val) => dispatch(setSelAdTypes(val)),
+    setSelCTAs: (val) => dispatch(setSelCTAs(val)),
+    setSelCountries: (val) => dispatch(setSelCountries(val)),
+    setSelEcommerce: (val) => dispatch(setSelEcommerce(val)),
+    setSelFunnels: (val) => dispatch(setSelFunnels(val)),
+    setSelAffiliates: (val) => dispatch(setSelAffiliates(val)),
+    setLikesRange: (val) => dispatch(setLikesRange(val)),
+    setSharesRange: (val) => dispatch(setSharesRange(val)),
+    setCommentsRange: (val) => dispatch(setCommentsRange(val)),
+    setImpressionsRange: (val) => dispatch(setImpressionsRange(val)),
+    setAdSeen: (val) => dispatch(setAdSeen(val)),
+    setPostDate: (val) => dispatch(setPostDate(val)),
+    setDomainAge: (val) => dispatch(setDomainAge(val)),
+    clearAll: () => dispatch(clearAllFilters()),
+  };
+
   const [collapsed, setCollapsed] = React.useState({
     explore: false,
     ai: false,
@@ -52,7 +101,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, filters, onGenerateStrategy }) => {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={() => dispatch(setSidebarOpen(false))}
         />
       )}
 
@@ -66,13 +115,13 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, filters, onGenerateStrategy }) => {
       >
         {/* Mobile Close Button */}
         <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="lg:hidden absolute top-3 right-2 p-1 text-gray-500 dark:text-[#888] hover:text-gray-900 dark:hover:text-white/60 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl z-[60]"
+          onClick={() => dispatch(setSidebarOpen(false))}
+          className="lg:hidden absolute top-2 right-1 p-1 text-gray-500 dark:text-[#888] hover:text-gray-900 dark:hover:text-white/60 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl z-[60]"
         >
           <X size={20} />
         </button>
 
-        <div className="py-2">
+        <div className="py-2 pt-6 lg:pt-2">
           {/* Nav */}
           <SectionLabel
             label="Explore"

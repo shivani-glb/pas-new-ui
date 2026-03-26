@@ -68,7 +68,7 @@ const InlineSelect = ({ value, options, onChange, renderOption }) => {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((p) => !p)}
-        className="flex items-center gap-1 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-colors"
+        className="flex items-center gap-1 2xl:text-sm text-[11px] font-semibold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-colors"
       >
         {renderOption(value)}
         <ChevronDown
@@ -86,7 +86,7 @@ const InlineSelect = ({ value, options, onChange, renderOption }) => {
                 onChange(opt);
                 setOpen(false);
               }}
-              className={`w-full px-3 py-1.5 text-xs text-left transition-colors ${
+              className={`w-full px-3 py-1.5 text-[11px] 2xl:text-xs text-left transition-colors ${
                 opt === value
                   ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 dark:bg-indigo-500/10 font-semibold"
                   : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.04]"
@@ -126,7 +126,7 @@ const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
     // Current month days
     for (let d = 1; d <= daysInMonth; d++) arr.push({ day: d, current: true });
     // Fill remaining to complete grid (6 rows)
-    const remaining = 42 - arr.length;
+    const remaining = 35 - arr.length;
     for (let d = 1; d <= remaining; d++) arr.push({ day: d, current: false });
     return arr;
   }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek, prevMonthDays]);
@@ -177,7 +177,7 @@ const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
       <div className="flex items-center justify-between mb-4 px-1">
         <button
           onClick={prevMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+          className="2xl:w-8 w-6 h-6 2xl:h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
         >
           <ChevronLeft size={16} />
         </button>
@@ -199,7 +199,7 @@ const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
 
         <button
           onClick={nextMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+          className="2xl:w-8 w-6 h-6 2xl:h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
         >
           <ChevronRight size={16} />
         </button>
@@ -210,7 +210,7 @@ const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
         {DAYS.map((d) => (
           <div
             key={d}
-            className="text-center text-[11px] font-medium text-gray-400 dark:text-gray-500 py-2"
+            className="text-center text-[9px] 2xl:text-[11px] font-medium text-gray-400 dark:text-gray-500 py-2"
           >
             {d}
           </div>
@@ -242,14 +242,14 @@ const Calendar = ({ startDate, endDate, selecting, onSelect }) => {
               return (
                 <div
                   key={ci}
-                  className={`relative flex items-center justify-center h-10 ${rangeBg}`}
+                  className={`relative flex items-center justify-center h-8 2xl:h-10 ${rangeBg}`}
                 >
                   <button
                     onClick={() =>
                       isCurrent && onSelect(new Date(viewYear, viewMonth, day))
                     }
                     disabled={!isCurrent}
-                    className={`relative w-9 h-9 rounded-full text-[13px] font-medium transition-all ${
+                    className={`relative 2xl:w-8 w-6 h-6 2xl:h-8 rounded-full text-[9px] 2xl:text-xs font-medium transition-all ${
                       !isCurrent
                         ? "text-gray-300 dark:text-gray-600/40 cursor-default"
                         : isSelected
@@ -366,7 +366,7 @@ const DateFilterDropdown = ({
       >
         <CalendarDays size={14} />
         {activeDateFilters > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center px-1 bg-indigo-500 rounded-full border-2 border-white dark:border-[#111] text-[9px] font-bold text-white">
+          <span className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center px-1 bg-indigo-500 dark:bg-indigo-600 rounded-full border-2 border-white dark:border-[#1c1c1c] text-[9px] font-bold text-white">
             {activeDateFilters}
           </span>
         )}
@@ -375,7 +375,7 @@ const DateFilterDropdown = ({
       {/* Mobile Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-80 sm:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 sm:hidden transition-opacity duration-300"
           onClick={handleCancel}
           aria-hidden="true"
         />
@@ -383,7 +383,7 @@ const DateFilterDropdown = ({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="fixed inset-x-3 top-1/2 -translate-y-1/2 sm:inset-auto sm:translate-y-0 sm:absolute sm:right-0 sm:top-full sm:mt-2 z-50 w-auto sm:w-[380px] rounded-2xl bg-white dark:bg-[#111] border border-gray-200 dark:border-[#1e1e30] shadow-2xl shadow-black/10 dark:shadow-black/50">
+        <div className="fixed inset-x-3 top-1/2 -translate-y-1/2 sm:inset-auto sm:translate-y-0 sm:absolute sm:right-0 sm:top-full sm:mt-2 z-50 w-auto max-w-[380px] mx-auto sm:w-[300px] 2xl:w-[380px] rounded-2xl bg-white dark:bg-[#111] border border-gray-200 dark:border-[#1e1e30] shadow-2xl shadow-black/10 dark:shadow-black/50">
           {/* Filter type tabs */}
           <div className="flex items-center gap-1 p-2.5 pb-0">
             {TABS.map((tab) => (
@@ -411,7 +411,7 @@ const DateFilterDropdown = ({
           <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
             <button
               onClick={() => setSelecting("start")}
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-center transition-all ${
+              className={`flex-1 px-4 py-1.5 2xl:py-2.5 2xl:rounded-xl rounded-lg text-[11px] 2xl:text-sm font-semibold text-center transition-all ${
                 selecting === "start"
                   ? "bg-white dark:bg-[#1a1a30] border-2 border-indigo-500/60 text-indigo-600 dark:text-white shadow-md shadow-indigo-500/10"
                   : "bg-gray-50 dark:bg-[#12121f] border-2 border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-[#2a2a3e]"
@@ -421,7 +421,7 @@ const DateFilterDropdown = ({
             </button>
             <button
               onClick={() => setSelecting("end")}
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-center transition-all ${
+              className={`flex-1 px-4 py-1.5 2xl:py-2.5 2xl:rounded-xl rounded-lg text-[11px] 2xl:text-sm font-semibold text-center transition-all ${
                 selecting === "end"
                   ? "bg-white dark:bg-[#1a1a30] border-2 border-indigo-500/60 text-indigo-600 dark:text-white shadow-md shadow-indigo-500/10"
                   : "bg-gray-50 dark:bg-[#12121f] border-2 border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-[#2a2a3e]"
@@ -435,7 +435,7 @@ const DateFilterDropdown = ({
           <div className="h-px bg-gray-100 dark:bg-[#1e1e30] mx-4" />
 
           {/* Calendar */}
-          <div className="px-4 py-4">
+          <div className="px-3 2xl:px-4 py-4">
             <Calendar
               startDate={currentTemp.start}
               endDate={currentTemp.end}
@@ -448,13 +448,13 @@ const DateFilterDropdown = ({
           <div className="flex items-center justify-end gap-2.5 px-4 py-3 border-t border-gray-100 dark:border-[#1e1e30]">
             <button
               onClick={handleCancel}
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white bg-gray-100 dark:bg-[#12121f] hover:bg-gray-200 dark:hover:bg-[#1a1a2e] border border-gray-200 dark:border-[#2a2a3e] transition-all"
+              className="px-5 py-2 2xl:py-2.5 2xl:rounded-xl rounded-lg text-[11px] 2xl:text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white bg-gray-100 dark:bg-[#12121f] hover:bg-gray-200 dark:hover:bg-[#1a1a2e] border border-gray-200 dark:border-[#2a2a3e] transition-all"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all"
+              className="px-5 2xl:py-2.5 py-2 2xl:rounded-xl rounded-lg text-[11px] 2xl:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all"
             >
               Apply
             </button>

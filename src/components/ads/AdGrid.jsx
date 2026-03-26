@@ -1,5 +1,20 @@
 import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { LayoutGrid, ChevronRight } from "lucide-react";
+
+import { setActivePlatform, setActiveTab } from "../../store/slices/uiSlice";
+import {
+  setSortBy,
+  setDateAdSeen,
+  setDatePostSeen,
+  setDateDomainReg,
+  setSelCategories,
+  setSelCountries,
+  setSelAdTypes,
+  selectActiveDateFiltersCount,
+  selectTotalActiveFiltersCount,
+} from "../../store/slices/filterSlice";
+
 import AdCard from "./AdCard";
 import PlatformTab from "../shared/PlatformTab";
 import FilterChip from "../filters/FilterChip";
@@ -7,16 +22,33 @@ import SortDropdown from "../filters/SortDropdown";
 import DateFilterDropdown from "../filters/DateFilterDropdown";
 import { PLATFORMS, SORT_TABS, AD_CATEGORIES } from "../../constants";
 
-const AdGrid = ({
-  ads,
-  activePlatform,
-  setActivePlatform,
-  filters,
-  activeTab,
-  setActiveTab,
-  activeCategory,
-  onAnalyzeAd,
-}) => {
+const AdGrid = ({ onAnalyzeAd }) => {
+  const dispatch = useDispatch();
+
+  // Select from Redux
+  const ads = useSelector((state) => state.ads.ads);
+  const { activePlatform, activeTab, activeCategory } = useSelector(
+    (state) => state.ui,
+  );
+
+  const filterState = useSelector((state) => state.filters);
+  const activeDateFilters = useSelector(selectActiveDateFiltersCount);
+  const totalActiveFilters = useSelector(selectTotalActiveFiltersCount);
+
+  // Wrap actions to simulate old filters prop
+  const filters = {
+    ...filterState,
+    activeDateFilters,
+    totalActiveFilters,
+    setSortBy: (val) => dispatch(setSortBy(val)),
+    setDateAdSeen: (val) => dispatch(setDateAdSeen(val)),
+    setDatePostSeen: (val) => dispatch(setDatePostSeen(val)),
+    setDateDomainReg: (val) => dispatch(setDateDomainReg(val)),
+    setSelCategories: (val) => dispatch(setSelCategories(val)),
+    setSelCountries: (val) => dispatch(setSelCountries(val)),
+    setSelAdTypes: (val) => dispatch(setSelAdTypes(val)),
+  };
+
   const [isHovered, setIsHovered] = React.useState(false);
   const [isManualExpanded, setIsManualExpanded] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
@@ -77,7 +109,7 @@ const AdGrid = ({
                       Icon={p.Icon}
                       label={p.label}
                       active={activePlatform === p.id}
-                      onClick={() => setActivePlatform(p.id)}
+                      onClick={() => dispatch(setActivePlatform(p.id))}
                       color={p.color}
                     />
                   </div>
@@ -102,8 +134,6 @@ const AdGrid = ({
               </button>
             )}
           </div>
-
-          {/* <div className="h-5 w-px bg-gray-200 dark:bg-[#1c1c1c] hidden sm:block" /> */}
         </div>
 
         {/* Right side: active chips + counter */}
@@ -113,7 +143,7 @@ const AdGrid = ({
             options={SORT_TABS}
             activeTab={activeTab}
             onSelect={(tab) => {
-              setActiveTab(tab);
+              dispatch(setActiveTab(tab));
               filters.setSortBy(tab);
             }}
           />
@@ -177,9 +207,12 @@ const AdGrid = ({
         </h2>
         <span className="text-gray-300 dark:text-[#333] text-xs">·</span>
         <span className="text-[11px] text-gray-500 dark:text-[#666]">
-          {filters.sortBy} · {activePlatform}
+          {Array.isArray(filters.sortBy) && filters.sortBy.length > 0
+            ? filters.sortBy.join(", ")
+            : "No Sort Selected"}{" "}
+          · {activePlatform}
           {activeCategory !== "all"
-            ? ` · ${AD_CATEGORIES.find((c) => c.id === activeCategory)?.label}`
+            ? ` · ${AD_CATEGORIES.find((c) => c.id === activeCategory)?.label || activeCategory}`
             : ""}
         </span>
         {filters.totalActiveFilters > 0 && (

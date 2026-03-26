@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   Menu,
   Play,
@@ -12,6 +13,14 @@ import {
   X,
 } from "lucide-react";
 import { useDebounce } from "../../hooks/useDebounce";
+
+import {
+  toggleSidebar,
+  setSearchIn,
+  setSearchQuery,
+  toggleTheme,
+} from "../../store/slices/uiSlice";
+import { setSelCategories } from "../../store/slices/filterSlice";
 
 // Sub-component for Suggestions Dropdown to keep JSX clean
 const SuggestionDropdown = ({
@@ -92,22 +101,17 @@ const SuggestionDropdown = ({
   </div>
 );
 
-const Header = ({
-  isSidebarOpen,
-  setIsSidebarOpen,
-  searchIn,
-  setSearchIn,
-  searchQuery,
-  setSearchQuery,
-  onGenerateStrategy,
-  filters,
-  isDarkMode,
-  toggleTheme,
-}) => {
+const Header = ({ onGenerateStrategy }) => {
+  const dispatch = useDispatch();
+  const { isSidebarOpen, searchIn, searchQuery, isDarkMode } = useSelector(
+    (state) => state.ui,
+  );
+  const selCategories = useSelector((state) => state.filters.selCategories);
+
   const [suggestions, setSuggestions] = useState([]);
   const [catSuggestions, setCatSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const suggestionRef = useRef(null);
 
@@ -219,18 +223,14 @@ const Header = ({
 
     if (type === "category") {
       // Apply category filter to the sidebar
-      if (filters && typeof filters.setSelCategories === "function") {
-        const catDisplay = suggestion.display;
-        if (catDisplay) {
-          filters.setSelCategories((prev) =>
-            prev.includes(catDisplay) ? prev : [...prev, catDisplay],
-          );
-        }
+      const catDisplay = suggestion.display;
+      if (catDisplay && !selCategories.includes(catDisplay)) {
+        dispatch(setSelCategories([...selCategories, catDisplay]));
       }
 
       // Fill only the keyword in search bar
       const keyword = (searchQuery || "").trim() || "";
-      setSearchQuery(keyword + " ");
+      dispatch(setSearchQuery(keyword + " "));
     } else {
       // Display word logic: prioritize .word, then string fallback
       const wordStr =
@@ -250,7 +250,7 @@ const Header = ({
 
         const prefix = words.length > 0 ? words.join(" ") + " " : "";
         const newQuery = prefix + wordStr + " ";
-        setSearchQuery(newQuery);
+        dispatch(setSearchQuery(newQuery));
       }
     }
 
@@ -273,7 +273,7 @@ const Header = ({
     <header className="h-16 px-1.5 sm:px-4 flex items-center justify-between sticky top-0 z-50 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md border-b border-gray-200 dark:border-[#1c1c1c]">
       <div className="flex items-center gap-2 sm:gap-3">
         <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          onClick={() => dispatch(toggleSidebar())}
           className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-md transition-colors text-gray-500 dark:text-[#aaa] hover:text-gray-900 dark:hover:text-white"
         >
           <Menu size={18} />
@@ -302,7 +302,7 @@ const Header = ({
               {["Ad Text", "Advertiser", "Keyword", "Domain"].map((opt) => (
                 <button
                   key={opt}
-                  onClick={() => setSearchIn(opt)}
+                  onClick={() => dispatch(setSearchIn(opt))}
                   className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${searchIn === opt ? "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-500/10" : "text-gray-500 dark:text-[#666] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.04]"}`}
                 >
                   {opt}
@@ -313,7 +313,7 @@ const Header = ({
           <input
             type="text"
             value={searchQuery || ""}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => dispatch(setSearchQuery(e.target.value))}
             onKeyDown={handleKeyDown}
             onFocus={() =>
               (suggestions.length > 0 || catSuggestions.length > 0) &&
@@ -328,7 +328,7 @@ const Header = ({
             )}
             {searchQuery ? (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => dispatch(setSearchQuery(""))}
                 className="p-1 text-gray-400 dark:text-[#888] hover:text-red-500 transition-colors"
                 title="Clear search"
               >
@@ -375,7 +375,7 @@ const Header = ({
 
         {/* Theme Toggle */}
         <button
-          onClick={toggleTheme}
+          onClick={() => dispatch(toggleTheme())}
           className="p-1 sm:p-1.5 hover:bg-gray-100 dark:hover:bg-white/[0.06] rounded-lg text-gray-500 dark:text-[#aaa] hover:text-gray-900 dark:hover:text-white transition-colors"
           title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
@@ -404,7 +404,7 @@ const Header = ({
                   {["Ad Text", "Advertiser", "Keyword", "Domain"].map((opt) => (
                     <button
                       key={opt}
-                      onClick={() => setSearchIn(opt)}
+                      onClick={() => dispatch(setSearchIn(opt))}
                       className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${searchIn === opt ? "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-500/10" : "text-gray-500 dark:text-[#666] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.04]"}`}
                     >
                       {opt}
@@ -416,7 +416,7 @@ const Header = ({
                 type="text"
                 autoFocus
                 value={searchQuery || ""}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
                 onKeyDown={(e) => {
                   handleKeyDown(e);
                   if (e.key === "Escape") setIsMobileSearchOpen(false);
@@ -427,7 +427,7 @@ const Header = ({
               />
               {searchQuery ? (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => dispatch(setSearchQuery(""))}
                   className="p-1 text-gray-400 dark:text-[#888] hover:text-red-500 transition-colors"
                 >
                   <X size={15} />
